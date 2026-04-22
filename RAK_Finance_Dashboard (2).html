@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAK Finance Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070910;--surface:#0d1017;--card:#111520;--border:#1c2332;
+  --accent:#00d4b8;--accent2:#f97316;--accent3:#8b5cf6;
+  --gold:#eab308;--red:#ef4444;--green:#22c55e;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
+  --font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;}
+
+/* LAYOUT */
+.app{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:216px;min-width:216px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* SIDEBAR */
+.logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
+.logo-title{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-.5px;font-family:var(--mono);}
+.logo-sub{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:2px;}
+.nav-sec{padding:14px 18px 4px;font-size:9px;color:var(--muted);letter-spacing:2.5px;text-transform:uppercase;font-family:var(--mono);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 18px;cursor:pointer;color:var(--muted2);font-size:12.5px;font-weight:500;border-left:2px solid transparent;transition:all .12s;white-space:nowrap;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(0,212,184,.06);}
+.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.user-block{margin-top:auto;padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent3),var(--accent));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-name{font-size:12.5px;font-weight:600;}
+.user-role{font-size:10px;color:var(--muted);}
+
+/* PAGE HEADER */
+.page-header{padding:16px 24px 0;flex-shrink:0;}
+.page-title{font-size:22px;font-weight:700;line-height:1;}
+.page-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.page-actions{display:flex;gap:6px;align-items:center;margin-top:12px;flex-wrap:wrap;}
+
+/* BUTTONS */
+.btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--font);transition:all .12s;display:inline-flex;align-items:center;gap:5px;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:#00f0d0;}
+.btn-outline{background:transparent;color:var(--muted2);border:1px solid var(--border);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-ghost{background:rgba(255,255,255,.04);color:var(--muted2);}
+.btn-ghost:hover{background:rgba(255,255,255,.08);color:var(--text);}
+.btn-danger{background:var(--red);color:#fff;}
+
+/* FORMULA BAR */
+.formula-bar{display:flex;align-items:center;gap:0;padding:0 24px;border-bottom:1px solid var(--border);height:34px;flex-shrink:0;background:var(--surface);}
+.cell-ref{font-family:var(--mono);font-size:11px;color:var(--muted2);width:58px;text-align:center;border-right:1px solid var(--border);height:100%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fx-label{font-family:var(--mono);font-size:11px;color:var(--accent);padding:0 10px;border-right:1px solid var(--border);height:100%;display:flex;align-items:center;flex-shrink:0;}
+.formula-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:12px;padding:0 12px;height:100%;}
+
+/* GRID CONTAINER */
+.grid-page{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.grid-page.active{display:flex;}
+
+/* TOOLBAR */
+.grid-toolbar{display:flex;align-items:center;gap:6px;padding:8px 24px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+.toolbar-search{flex:1;min-width:160px;max-width:280px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:5px 10px;color:var(--text);font-size:12px;font-family:var(--font);outline:none;}
+.toolbar-search:focus{border-color:var(--accent);}
+.toolbar-fsel{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;font-family:var(--font);outline:none;cursor:pointer;}
+.toolbar-fsel option{background:var(--surface);}
+.kb-bar{display:flex;gap:10px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);padding:5px 24px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(0,0,0,.2);}
+.kb-bar kbd{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-family:var(--mono);font-size:9.5px;color:var(--muted2);}
+
+/* SPREADSHEET */
+.sheet-wrap{flex:1;overflow:auto;position:relative;}
+.sheet-table{border-collapse:collapse;min-width:100%;font-size:12.5px;table-layout:fixed;}
+
+/* HEADER ROW */
+.sheet-table thead th{
+  background:#0a0c12;color:var(--muted);font-size:10px;font-weight:600;
+  letter-spacing:.6px;text-transform:uppercase;
+  padding:0 8px;height:30px;text-align:left;
+  font-family:var(--mono);border-bottom:2px solid var(--border);
+  border-right:1px solid var(--border);
+  position:sticky;top:0;z-index:10;user-select:none;white-space:nowrap;
+  overflow:hidden;
+}
+.sheet-table thead th.th-row-num{width:44px;text-align:center;color:var(--muted);font-size:9px;}
+.sheet-table thead th.th-add{width:36px;text-align:center;cursor:pointer;color:var(--accent);font-size:18px;font-weight:300;letter-spacing:0;}
+.sheet-table thead th.th-add:hover{background:rgba(0,212,184,.1);}
+.sheet-table thead th.th-auto{color:var(--accent);}
+
+/* BODY */
+.sheet-table tbody tr{border-bottom:1px solid rgba(255,255,255,.03);}
+.sheet-table tbody tr:nth-child(even){background:rgba(255,255,255,.008);}
+.sheet-table tbody tr:hover{background:rgba(255,255,255,.018);}
+.sheet-table tbody tr.row-selected{background:rgba(0,212,184,.05) !important;}
+
+/* CELLS */
+.sheet-table tbody td{
+  padding:0;border-right:1px solid rgba(255,255,255,.03);
+  position:relative;height:32px;vertical-align:middle;
+  overflow:hidden;
+}
+.sheet-table tbody td.td-row-num{
+  text-align:center;background:#0a0c12;color:var(--muted);
+  font-size:10px;font-family:var(--mono);position:relative;
+  border-right:2px solid var(--border);user-select:none;
+  cursor:default;
+}
+.row-del-btn{
+  display:none;position:absolute;right:2px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;border-radius:3px;background:var(--red);
+  color:#fff;font-size:10px;line-height:16px;text-align:center;
+  cursor:pointer;z-index:5;font-weight:700;
+}
+tr:hover .row-del-btn{display:block;}
+
+/* CELL CONTENT */
+.cell{
+  display:block;width:100%;height:100%;padding:0 8px;
+  line-height:32px;cursor:cell;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;outline:none;color:var(--text);
+  font-family:var(--font);font-size:12.5px;
+  -webkit-user-select:none;user-select:none;
+}
+.cell.focused{
+  background:rgba(0,212,184,.06);
+  box-shadow:inset 0 0 0 2px var(--accent);
+  z-index:2;
+}
+/* ACTIVE EDIT */
+td.editing-td{overflow:visible;z-index:20;}
+.cell-editor{
+  position:absolute;top:-1px;left:-1px;
+  min-width:calc(100% + 2px);height:34px;
+  background:#0d1520;border:2px solid var(--accent);
+  outline:none;color:var(--text);font-family:var(--font);font-size:12.5px;
+  padding:0 8px;line-height:32px;z-index:100;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;
+}
+
+/* DROPDOWN OVERLAY */
+.dropdown-overlay{
+  position:fixed;z-index:999;background:#0d1520;
+  border:1px solid var(--accent);border-radius:6px;
+  max-height:220px;overflow-y:auto;min-width:160px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.dropdown-overlay .dd-item{
+  padding:7px 12px;cursor:pointer;font-size:12px;
+  color:var(--muted2);transition:background .1s;white-space:nowrap;
+}
+.dropdown-overlay .dd-item:hover,.dropdown-overlay .dd-item.dd-active{
+  background:rgba(0,212,184,.12);color:var(--text);
+}
+.dropdown-overlay .dd-item.dd-selected{color:var(--accent);font-weight:600;}
+
+/* CELL TYPES */
+td.c-num .cell{color:var(--green);font-family:var(--mono);}
+td.c-numR .cell{color:var(--red);font-family:var(--mono);}
+td.c-mono .cell{color:var(--muted2);font-family:var(--mono);font-size:11.5px;}
+td.c-bold .cell{font-weight:600;}
+td.c-auto .cell{font-family:var(--mono);font-weight:600;}
+td.c-auto-pos .cell{color:var(--green);font-family:var(--mono);font-weight:600;}
+td.c-auto-neg .cell{color:var(--red);font-family:var(--mono);font-weight:600;}
+
+/* FOOTER */
+.sheet-footer{display:flex;justify-content:space-between;align-items:center;padding:6px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);flex-shrink:0;background:var(--surface);}
+.sheet-footer strong{color:var(--accent);font-family:var(--mono);}
+.sheet-status{display:flex;gap:16px;}
+
+/* DASHBOARD */
+.dash-page{display:none;flex:1;overflow-y:auto;padding:20px 24px;}
+.dash-page.active{display:block;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--cc,var(--accent));}
+.stat-lbl{font-size:9.5px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:var(--mono);}
+.stat-val{font-size:24px;font-weight:700;margin:5px 0 2px;line-height:1;font-family:var(--mono);}
+.stat-chg{font-size:11px;color:var(--muted2);}
+.stat-chg.g{color:var(--green);}
+.stat-chg.r{color:var(--red);}
+.dash-grid-2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px;}
+.dash-grid-eq{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.dcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.dcard-title{font-size:12px;font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;color:var(--muted2);}
+.dcard-title a{color:var(--accent);font-size:11px;text-decoration:none;}
+.chart-area{height:160px;display:flex;align-items:flex-end;gap:4px;padding-bottom:20px;position:relative;}
+.cbar{flex:1;border-radius:3px 3px 0 0;min-height:3px;cursor:pointer;position:relative;}
+.cbar:hover{opacity:.75;}
+.cbar-lbl{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:8.5px;color:var(--muted);font-family:var(--mono);white-space:nowrap;}
+.cbar-val{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:8.5px;color:var(--text);font-family:var(--mono);white-space:nowrap;opacity:0;transition:opacity .12s;}
+.cbar:hover .cbar-val{opacity:1;}
+.dtable{width:100%;border-collapse:collapse;font-size:12px;}
+.dtable th{padding:6px 8px;text-align:left;color:var(--muted);font-size:9.5px;border-bottom:1px solid var(--border);font-weight:600;font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;}
+.dtable td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);}
+
+/* TEAM PAGE */
+.team-page{display:none;flex:1;overflow-y:auto;padding:20px 24px;}
+.team-page.active{display:block;}
+.perm-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10.5px;font-weight:600;}
+.perm-admin{background:rgba(234,179,8,.12);color:var(--gold);}
+.perm-edit{background:rgba(0,212,184,.12);color:var(--accent);}
+.perm-view{background:rgba(100,116,139,.15);color:var(--muted2);}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;width:480px;max-width:95vw;animation:mIn .16s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(-6px);}}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:16px;}
+.mfg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.mfgrp{display:flex;flex-direction:column;gap:4px;}
+.mfgrp label{font-size:9.5px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:var(--mono);}
+.mfgrp input,.mfgrp select{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:8px 10px;color:var(--text);font-size:12.5px;font-family:var(--font);outline:none;}
+.mfgrp input:focus,.mfgrp select:focus{border-color:var(--accent);}
+.mfgrp select option{background:var(--surface);}
+.mfooter{display:flex;gap:6px;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;z-index:9999;padding:9px 16px;border-radius:7px;font-size:12px;font-weight:600;transform:translateY(50px);opacity:0;transition:all .2s;pointer-events:none;font-family:var(--mono);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{background:var(--green);color:#000;}
+.toast.err{background:var(--red);color:#fff;}
+.toast.info{background:var(--card);color:var(--text);border:1px solid var(--border);}
+
+/* SHORTCUT PANEL */
+.shortcut-panel{display:none;position:fixed;right:16px;top:50%;transform:translateY(-50%);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;width:260px;z-index:500;font-size:11px;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.shortcut-panel.open{display:block;}
+.shortcut-panel h3{font-size:12px;font-weight:700;margin-bottom:10px;color:var(--accent);font-family:var(--mono);}
+.sc-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.sc-row:last-child{border:none;}
+.sc-desc{color:var(--muted2);}
+.sc-keys{display:flex;gap:3px;}
+.sc-keys kbd{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-family:var(--mono);font-size:9.5px;color:var(--text);}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#2a3347;}
+a{color:var(--accent);text-decoration:none;}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;font-family:var(--mono);}
+.badge-g{background:rgba(34,197,94,.12);color:var(--green);}
+.badge-r{background:rgba(239,68,68,.12);color:var(--red);}
+.badge-b{background:rgba(0,212,184,.12);color:var(--accent);}
+.badge-v{background:rgba(139,92,246,.12);color:var(--accent3);}
+.save-indicator{font-size:10px;color:var(--muted);font-family:var(--mono);display:flex;align-items:center;gap:4px;}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.save-dot.dirty{background:var(--gold);}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo"><div class="logo-title">RAK</div><div class="logo-sub">Finance Hub</div></div>
+  <div class="nav-sec">Main</div>
+  <div class="nav-item active" onclick="nav('dashboard')"><span class="nav-icon">◈</span>Dashboard</div>
+  <div class="nav-item" onclick="nav('deposits')"><span class="nav-icon">↓</span>Deposits</div>
+  <div class="nav-item" onclick="nav('withdrawals')"><span class="nav-icon">↑</span>Withdrawals</div>
+  <div class="nav-item" onclick="nav('income')"><span class="nav-icon">＋</span>Income</div>
+  <div class="nav-item" onclick="nav('expenses')"><span class="nav-icon">−</span>Expenses</div>
+  <div class="nav-item" onclick="nav('internal')"><span class="nav-icon">⇄</span>Internal Txns</div>
+  <div class="nav-sec">Accounts</div>
+  <div class="nav-item" onclick="nav('banks')"><span class="nav-icon">▣</span>Bank Accounts</div>
+  <div class="nav-item" onclick="nav('panels')"><span class="nav-icon">◐</span>Panels</div>
+  <div class="nav-sec">Admin</div>
+  <div class="nav-item" onclick="nav('team')"><span class="nav-icon">◎</span>Team Access</div>
+  <div class="user-block">
+    <div class="user-av">R</div>
+    <div><div class="user-name">RAK Admin</div><div class="user-role">Owner</div></div>
+  </div>
+</aside>
+
+<!-- MAIN AREA -->
+<div class="main" id="main-area">
+
+  <!-- FORMULA BAR (shows for grid pages) -->
+  <div class="formula-bar" id="formula-bar" style="display:none;">
+    <div class="cell-ref" id="cell-ref-display">A1</div>
+    <div class="fx-label">fx</div>
+    <input class="formula-input" id="formula-input" readonly placeholder="Select a cell...">
+    <div class="save-indicator" style="padding:0 12px;"><div class="save-dot" id="save-dot"></div><span id="save-label">Saved</span></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dash-page active" id="page-dashboard">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
+      <div><div class="page-title">Dashboard</div><div class="page-sub">October 2024 — Live Financial Overview</div></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="showShortcuts()">⌨ Shortcuts</button>
+        <button class="btn btn-outline" onclick="exportCSV('deposits')">↑ Export</button>
+        <button class="btn btn-primary" onclick="nav('deposits')">+ New Entry</button>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card" style="--cc:var(--green)"><div class="stat-lbl">Total Deposits</div><div class="stat-val" id="ds-dep">—</div><div class="stat-chg g" id="ds-depc"></div></div>
+      <div class="stat-card" style="--cc:var(--red)"><div class="stat-lbl">Total Withdrawals</div><div class="stat-val" id="ds-wdr">—</div><div class="stat-chg r" id="ds-wdrc"></div></div>
+      <div class="stat-card" style="--cc:var(--accent)"><div class="stat-lbl">Panel Net Diff</div><div class="stat-val" style="color:var(--green)" id="ds-diff">—</div><div class="stat-chg g">All panels</div></div>
+      <div class="stat-card" style="--cc:var(--gold)"><div class="stat-lbl">Active Banks</div><div class="stat-val" id="ds-banks">—</div><div class="stat-chg g">Accounts</div></div>
+    </div>
+    <div class="dash-grid-2">
+      <div class="dcard"><div class="dcard-title">Bank-wise Deposits <span>Top 10</span></div><div class="chart-area" id="dash-chart"></div></div>
+      <div class="dcard"><div class="dcard-title">Panel Summary</div>
+        <table class="dtable"><thead><tr><th>Panel</th><th>Deposit</th><th>Withdraw</th><th>Diff</th></tr></thead><tbody id="dash-panels"></tbody></table>
+      </div>
+    </div>
+    <div class="dash-grid-eq">
+      <div class="dcard"><div class="dcard-title">Recent Deposits <a href="#" onclick="nav('deposits')">View all →</a></div>
+        <table class="dtable"><thead><tr><th>ID Name</th><th>Amount</th><th>Bank</th><th>Panel</th></tr></thead><tbody id="dash-rdep"></tbody></table>
+      </div>
+      <div class="dcard"><div class="dcard-title">Recent Withdrawals <a href="#" onclick="nav('withdrawals')">View all →</a></div>
+        <table class="dtable"><thead><tr><th>ID Name</th><th>Amount</th><th>Bank</th><th>Panel</th></tr></thead><tbody id="dash-rwdr"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRID PAGES (deposits, withdrawals, income, expenses, internal, banks, panels) -->
+  <div class="grid-page" id="page-deposits">
+    <div class="grid-toolbar">
+      <input class="toolbar-search" placeholder="🔍 Search..." oninput="gs('deposits',this.value)">
+      <select class="toolbar-fsel" onchange="gf('deposits','panel',this.value)"><option value="">All Panels</option><option>fairplay</option><option>myfairplay</option><option>11xplay</option><option>laser</option></select>
+      <select class="toolbar-fsel" id="dep-bfil" onchange="gf('deposits','bank',this.value)"><option value="">All Banks</option></select>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="addRow('deposits')" title="Ctrl+Shift+= or Tab on last cell">+ Row</button>
+        <button class="btn btn-outline" onclick="exportCSV('deposits')">↑ CSV</button>
+      </div>
+    </div>
+    <div class="kb-bar">
+      <span><kbd>↑↓←→</kbd> Navigate</span>
+      <span><kbd>Enter</kbd> / <kbd>F2</kbd> Edit</span>
+      <span><kbd>Tab</kbd> Next</span>
+      <span><kbd>Shift+Tab</kbd> Prev</span>
+      <span><kbd>Esc</kbd> Cancel</span>
+      <span><kbd>Delete</kbd> Clear</span>
+      <span><kbd>Ctrl+Z</kbd> Undo</span>
+      <span><kbd>Ctrl+Y</kbd> Redo</span>
+      <span><kbd>Ctrl+Enter</kbd> Confirm+stay</span>
+      <span><kbd>Ctrl+D</kbd> Dup row</span>
+      <span><kbd>Ctrl+Shift+=</kbd> Add row</span>
+      <span><kbd>Ctrl+−</kbd> Del row</span>
+      <span><kbd>Home</kbd>/<kbd>End</kbd> First/Last col</span>
+      <span><kbd>Ctrl+Home</kbd> Top-left</span>
+      <span><kbd>Ctrl+End</kbd> Last cell</span>
+    </div>
+    <div class="sheet-wrap" id="wrap-deposits" onscroll="onWrapScroll(event,'deposits')">
+      <table class="sheet-table" id="tbl-deposits">
+        <thead><tr><th class="th-row-num">#</th><th>REMARK</th><th>AMOUNT</th><th>ID NAME</th><th>UTR</th><th>BANK</th><th>PANEL</th><th class="th-add" onclick="addRow('deposits')" title="Add Row">+</th></tr></thead>
+        <tbody id="body-deposits"></tbody>
+      </table>
+    </div>
+    <div class="sheet-footer"><div class="sheet-status"><span id="fc-deposits">0 rows</span><span id="sel-deposits"></span></div><strong id="ft-deposits"></strong></div>
+  </div>
+
+  <div class="grid-page" id="page-withdrawals">
+    <div class="grid-toolbar">
+      <input class="toolbar-search" placeholder="🔍 Search..." oninput="gs('withdrawals',this.value)">
+      <select class="toolbar-fsel" onchange="gf('withdrawals','panel',this.value)"><option value="">All Panels</option><option>fairplay</option><option>myfairplay</option><option>11xplay</option><option>laser</option></select>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="addRow('withdrawals')">+ Row</button>
+        <button class="btn btn-outline" onclick="exportCSV('withdrawals')">↑ CSV</button>
+      </div>
+    </div>
+    <div class="kb-bar"><span><kbd>↑↓←→</kbd></span><span><kbd>Enter</kbd>/<kbd>F2</kbd> Edit</span><span><kbd>Tab</kbd> Next</span><span><kbd>Del</kbd> Clear</span><span><kbd>Ctrl+Z</kbd> Undo</span><span><kbd>Ctrl+Y</kbd> Redo</span><span><kbd>Ctrl+D</kbd> Dup</span><span><kbd>Ctrl+Shift+=</kbd> Add row</span></div>
+    <div class="sheet-wrap" id="wrap-withdrawals">
+      <table class="sheet-table" id="tbl-withdrawals">
+        <thead><tr><th class="th-row-num">#</th><th>REMARK</th><th>AMOUNT</th><th>ID NAME</th><th>PANEL</th><th>BANK</th><th>W. REMARK</th><th class="th-add" onclick="addRow('withdrawals')">+</th></tr></thead>
+        <tbody id="body-withdrawals"></tbody>
+      </table>
+    </div>
+    <div class="sheet-footer"><div class="sheet-status"><span id="fc-withdrawals">0 rows</span></div><strong id="ft-withdrawals"></strong></div>
+  </div>
+
+  <div class="grid-page" id="page-income">
+    <div class="grid-toolbar">
+      <input class="toolbar-search" placeholder="🔍 Search income..." oninput="gs('income',this.value)">
+      <div class="stats-grid" id="st-income" style="margin:0;margin-left:auto;display:flex;gap:8px;"></div>
+      <button class="btn btn-ghost" onclick="addRow('income')">+ Row</button>
+    </div>
+    <div class="kb-bar"><span><kbd>↑↓←→</kbd></span><span><kbd>Enter</kbd>/<kbd>F2</kbd> Edit</span><span><kbd>Tab</kbd> Next</span><span><kbd>Del</kbd> Clear</span><span><kbd>Ctrl+Z</kbd> Undo</span><span><kbd>Ctrl+Y</kbd> Redo</span></div>
+    <div class="sheet-wrap"><table class="sheet-table" id="tbl-income">
+      <thead><tr><th class="th-row-num">#</th><th>DATE</th><th>SOURCE</th><th>AMOUNT</th><th>BANK</th><th>REMARK</th><th class="th-add" onclick="addRow('income')">+</th></tr></thead>
+      <tbody id="body-income"></tbody>
+    </table></div>
+    <div class="sheet-footer"><div class="sheet-status"><span id="fc-income">0 rows</span></div><strong id="ft-income"></strong></div>
+  </div>
+
+  <div class="grid-page" id="page-expenses">
+    <div class="grid-toolbar">
+      <input class="toolbar-search" placeholder="🔍 Search expenses..." oninput="gs('expenses',this.value)">
+      <select class="toolbar-fsel" onchange="gf('expenses','category',this.value)"><option value="">All Categories</option><option>Charges</option><option>Operations</option><option>Transfer Fee</option><option>Misc</option></select>
+      <button class="btn btn-ghost" onclick="addRow('expenses')" style="margin-left:auto">+ Row</button>
+    </div>
+    <div class="kb-bar"><span><kbd>↑↓←→</kbd></span><span><kbd>Enter</kbd>/<kbd>F2</kbd> Edit</span><span><kbd>Tab</kbd> Next</span><span><kbd>Del</kbd> Clear</span><span><kbd>Ctrl+Z</kbd> Undo</span><span><kbd>Ctrl+Y</kbd> Redo</span></div>
+    <div class="sheet-wrap"><table class="sheet-table" id="tbl-expenses">
+      <thead><tr><th class="th-row-num">#</th><th>DATE</th><th>CATEGORY</th><th>AMOUNT</th><th>BANK</th><th>REMARK</th><th class="th-add" onclick="addRow('expenses')">+</th></tr></thead>
+      <tbody id="body-expenses"></tbody>
+    </table></div>
+    <div class="sheet-footer"><div class="sheet-status"><span id="fc-expenses">0 rows</span></div><strong id="ft-expenses"></strong></div>
+  </div>
+
+  <div class="grid-page" id="page-internal">
+    <div class="grid-toolbar">
+      <input class="toolbar-search" placeholder="🔍 Search transfers..." oninput="gs('internal',this.value)">
+      <button class="btn btn-ghost" onclick="addRow('internal')" style="margin-left:auto">+ Row</button>
+    </div>
+    <div class="kb-bar"><span><kbd>↑↓←→</kbd></span><span><kbd>Enter</kbd>/<kbd>F2</kbd> Edit</span><span><kbd>Tab</kbd> Next</span><span><kbd>Del</kbd> Clear</span><span><kbd>Ctrl+Z</kbd> Undo</span><span><kbd>Ctrl+Y</kbd> Redo</span></div>
+    <div class="sheet-wrap"><table class="sheet-table" id="tbl-internal">
+      <thead><tr><th class="th-row-num">#</th><th>DATE</th><th>FROM BANK</th><th>TO BANK</th><th>AMOUNT</th><th>REMARK</th><th class="th-add" onclick="addRow('internal')">+</th></tr></thead>
+      <tbody id="body-internal"></tbody>
+    </table></div>
+    <div class="sheet-footer"><div class="sheet-status"><span id="fc-internal">0 rows</span></div><strong id="ft-internal"></strong></div>
+  </div>
+
+  <div class="grid-page" id="page-banks">
+    <div class="grid-toolbar">
+      <span style="font-size:11px;color:var(--accent);font-family:var(--mono)">⚡ Available Bal = OP Bal + Dep − Wdr + TfrIn − TfrOut − Exp + Inc</span>
+      <button class="btn btn-ghost" onclick="addRow('banks')" style="margin-left:auto">+ Row</button>
+    </div>
+    <div class="kb-bar"><span><kbd>↑↓←→</kbd></span><span><kbd>Enter</kbd>/<kbd>F2</kbd> Edit</span><span><kbd>Tab</kbd> Next</span><span><kbd>Del</kbd> Clear</span><span><kbd>Ctrl+Z</kbd> Undo</span><span><kbd>Ctrl+Y</kbd> Redo</span></div>
+    <div class="sheet-wrap"><table class="sheet-table" id="tbl-banks">
+      <thead><tr><th class="th-row-num">#</th><th>BANK NAME</th><th>OP BALANCE</th><th>DEPOSIT</th><th>WITHDRAWAL</th><th>TRANSFER IN</th><th>TRANSFER OUT</th><th>EXPENSES</th><th>INCOME</th><th class="th-auto">AVAILABLE BAL ⚡</th><th class="th-add" onclick="addRow('banks')">+</th></tr></thead>
+      <tbody id="body-banks"></tbody>
+    </table></div>
+    <div class="sheet-footer"><div class="sheet-status"><span id="fc-banks">0 rows</span></div><strong id="ft-banks"></strong></div>
+  </div>
+
+  <div class="grid-page" id="page-panels">
+    <div class="grid-toolbar">
+      <span style="font-size:11px;color:var(--accent);font-family:var(--mono)">⚡ Diff = Deposit − Withdraw &nbsp;|&nbsp; CL Coin Bal = Opening + Diff − Settlement</span>
+      <button class="btn btn-ghost" onclick="addRow('panels')" style="margin-left:auto">+ Row</button>
+    </div>
+    <div class="kb-bar"><span><kbd>↑↓←→</kbd></span><span><kbd>Enter</kbd>/<kbd>F2</kbd> Edit</span><span><kbd>Tab</kbd> Next</span><span><kbd>Del</kbd> Clear</span><span><kbd>Ctrl+Z</kbd> Undo</span><span><kbd>Ctrl+Y</kbd> Redo</span></div>
+    <div class="sheet-wrap"><table class="sheet-table" id="tbl-panels">
+      <thead><tr><th class="th-row-num">#</th><th>PANEL NO.</th><th>PANEL</th><th>OPENING BAL</th><th>DEPOSIT</th><th>WITHDRAW</th><th class="th-auto">DIFF ⚡</th><th>COINS ADDED</th><th>SETTLEMENT</th><th class="th-auto" style="color:var(--gold)">CL COIN BAL ⚡</th><th class="th-add" onclick="addRow('panels')">+</th></tr></thead>
+      <tbody id="body-panels"></tbody>
+    </table></div>
+    <div class="sheet-footer"><div class="sheet-status"><span id="fc-panels">0 rows</span></div><strong id="ft-panels"></strong></div>
+  </div>
+
+  <!-- TEAM PAGE -->
+  <div class="team-page" id="page-team">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div><div class="page-title">Team Access</div><div class="page-sub">Manage teammate permissions and access levels</div></div>
+      <button class="btn btn-primary" onclick="openTeamModal()">+ Invite Member</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+      <div class="dcard"><span class="perm-badge perm-admin">👑 Admin</span><p style="font-size:12px;color:var(--muted2);margin-top:8px;">Full access — add, edit, delete all records and manage team.</p></div>
+      <div class="dcard"><span class="perm-badge perm-edit">✏️ Editor</span><p style="font-size:12px;color:var(--muted2);margin-top:8px;">Can add and edit entries. Cannot delete or manage team.</p></div>
+      <div class="dcard"><span class="perm-badge perm-view">👁️ Viewer</span><p style="font-size:12px;color:var(--muted2);margin-top:8px;">Read-only access. Can view all data, no changes.</p></div>
+    </div>
+    <div class="dcard">
+      <div class="dcard-title" style="margin-bottom:0">Team Members <span id="team-count" style="color:var(--muted)"></span></div>
+      <table class="dtable" style="margin-top:12px;"><thead><tr><th>NAME</th><th>EMAIL / ID</th><th>ROLE</th><th>ACCESS</th><th>ACTION</th></tr></thead><tbody id="tb-team"></tbody></table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- SHORTCUTS PANEL -->
+<div class="shortcut-panel" id="shortcut-panel">
+  <h3>⌨ Keyboard Shortcuts</h3>
+  <div class="sc-row"><span class="sc-desc">Navigate</span><span class="sc-keys"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Edit cell</span><span class="sc-keys"><kbd>Enter</kbd> / <kbd>F2</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Confirm + move down</span><span class="sc-keys"><kbd>Enter</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Confirm + move right</span><span class="sc-keys"><kbd>Tab</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Confirm + move left</span><span class="sc-keys"><kbd>Shift+Tab</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Cancel edit</span><span class="sc-keys"><kbd>Esc</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Clear cell</span><span class="sc-keys"><kbd>Delete</kbd> / <kbd>Backspace</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Undo</span><span class="sc-keys"><kbd>Ctrl+Z</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Redo</span><span class="sc-keys"><kbd>Ctrl+Y</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Add row below</span><span class="sc-keys"><kbd>Ctrl+Shift+=</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Delete row</span><span class="sc-keys"><kbd>Ctrl+−</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Duplicate row</span><span class="sc-keys"><kbd>Ctrl+D</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">First column</span><span class="sc-keys"><kbd>Home</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Last column</span><span class="sc-keys"><kbd>End</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">First cell</span><span class="sc-keys"><kbd>Ctrl+Home</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Last cell</span><span class="sc-keys"><kbd>Ctrl+End</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Jump 10 rows</span><span class="sc-keys"><kbd>Ctrl+↓</kbd> / <kbd>Ctrl+↑</kbd></span></div>
+  <div class="sc-row"><span class="sc-desc">Close shortcuts</span><span class="sc-keys"><kbd>Esc</kbd></span></div>
+  <div style="margin-top:10px;"><button class="btn btn-ghost" style="width:100%;font-size:11px;" onclick="hideShortcuts()">Close</button></div>
+</div>
+
+<!-- TEAM MODAL -->
+<div class="modal-ov" id="modal-team">
+  <div class="modal">
+    <div class="modal-title">Invite Team Member</div>
+    <div class="mfg">
+      <div class="mfgrp"><label>Full Name *</label><input id="t-name" placeholder="Name"></div>
+      <div class="mfgrp"><label>Email / ID *</label><input id="t-email" placeholder="email@example.com"></div>
+      <div class="mfgrp"><label>Role</label><input id="t-role" placeholder="e.g. Accountant"></div>
+      <div class="mfgrp"><label>Access Level</label><select id="t-access"><option value="view">👁️ Viewer</option><option value="edit">✏️ Editor</option><option value="admin">👑 Admin</option></select></div>
+    </div>
+    <p style="font-size:11px;color:var(--muted)">Share your Netlify URL with this person after inviting.</p>
+    <div class="mfooter">
+      <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeamMember()">Invite</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DEFAULTS — loaded once, then localStorage takes over
+// ═══════════════════════════════════════════════════════════
+const DEFAULTS = {
+  deposits:[
+    {id:1,remark:'NEW ID',amount:691,id_name:'X65SONU301',utr:'7590',bank:'PIYUSH CSB',panel:'11xplay'},
+    {id:2,remark:'',amount:565,id_name:'X65SONU301',utr:'7439',bank:'PIYUSH CSB',panel:'11xplay'},
+    {id:3,remark:'',amount:2000,id_name:'X65SONU301',utr:'336',bank:'PIYUSH CSB',panel:'11xplay'},
+    {id:4,remark:'',amount:704,id_name:'X65SONU301',utr:'8199',bank:'PIYUSH CSB',panel:'11xplay'},
+    {id:5,remark:'',amount:500,id_name:'MY65MOHIT286',utr:'5954',bank:'FP65 NEW ID',panel:'myfairplay'},
+    {id:6,remark:'',amount:500,id_name:'MY65MADAN343',utr:'1047',bank:'FP65 NEW ID',panel:'myfairplay'},
+    {id:7,remark:'',amount:4000,id_name:'MY65MESSI844',utr:'8066',bank:'FP65 NEW ID',panel:'myfairplay'},
+    {id:8,remark:'',amount:650,id_name:'FP65Bhagu346',utr:'2157',bank:'FP65 NEW ID',panel:'fairplay'},
+    {id:9,remark:'',amount:500,id_name:'FP65Contervilla613',utr:'9454',bank:'FP65 NEW ID',panel:'fairplay'},
+    {id:10,remark:'AFTER 12 AM',amount:500,id_name:'L65GOVIND',utr:'7056',bank:'FP65 NEW ID',panel:'laser'},
+    {id:11,remark:'',amount:500,id_name:'FP65VENKATRAO462',utr:'8756',bank:'FP65 NEW ID',panel:'fairplay'},
+    {id:12,remark:'',amount:500,id_name:'FP65Prasanna',utr:'5966',bank:'FP65 NEW ID',panel:'fairplay'},
+    {id:13,remark:'',amount:1000,id_name:'FP65SID664',utr:'2860',bank:'FP65 NEW ID',panel:'fairplay'},
+    {id:14,remark:'',amount:500,id_name:'MY65LAVA6100',utr:'9113',bank:'FP65 NEW ID',panel:'myfairplay'},
+    {id:15,remark:'',amount:500,id_name:'MY65SOHAIL616',utr:'6153',bank:'FP65 NEW ID',panel:'myfairplay'},
+    {id:16,remark:'NEW ID',amount:2000,id_name:'MFP223Govind64',utr:'3680',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:17,remark:'',amount:2000,id_name:'MFP223Govind64',utr:'1813',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:18,remark:'',amount:1000,id_name:'MFP223Vikash87',utr:'7439',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:19,remark:'',amount:300,id_name:'mfp223Anil856',utr:'7459',bank:'UMANG KCB',panel:'myfairplay'},
+    {id:20,remark:'',amount:2000,id_name:'my181akhtar4758',utr:'1675',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:21,remark:'',amount:1000,id_name:'MY181LALIT7677',utr:'1589',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:22,remark:'',amount:5000,id_name:'MFP223Govind64',utr:'57',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:23,remark:'',amount:2000,id_name:'m181papun707',utr:'1673',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:24,remark:'',amount:300,id_name:'m181vikram9775',utr:'3684',bank:'UMANG KCB',panel:'myfairplay'},
+    {id:25,remark:'',amount:300,id_name:'m181mahesh412',utr:'6193',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:26,remark:'',amount:5000,id_name:'m181sipun230',utr:'5217',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:27,remark:'',amount:900,id_name:'FP223ANIKET786',utr:'171',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:28,remark:'',amount:1000,id_name:'MFPVimlendra4567',utr:'3862',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:29,remark:'',amount:1000,id_name:'m181robin205',utr:'8394',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:30,remark:'',amount:5800,id_name:'my181suman',utr:'9701',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:31,remark:'',amount:500,id_name:'mfp223SUMI343',utr:'5026',bank:'UMANG KCB',panel:'myfairplay'},
+    {id:32,remark:'NEW ID',amount:500,id_name:'FP57CHAIRTHRA69',utr:'5555',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:33,remark:'',amount:1000,id_name:'mfp223SUMI343',utr:'2745',bank:'UMANG KCB',panel:'myfairplay'},
+    {id:34,remark:'',amount:500,id_name:'MFP223UPENDRA001',utr:'6460',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:35,remark:'',amount:2000,id_name:'mfp223SUMI343',utr:'2083',bank:'UMANG KCB',panel:'myfairplay'},
+    {id:36,remark:'',amount:2000,id_name:'m181papun707',utr:'9322',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:37,remark:'',amount:2000,id_name:'MFP223UPENDRA001',utr:'7578',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:38,remark:'',amount:500,id_name:'MFP223Hussain674',utr:'5808',bank:'PIYUSH CSB',panel:'myfairplay'},
+    {id:39,remark:'GIRISH BANDHAN',amount:2000,id_name:'mfp223praveen636',utr:'371',bank:'GIRISH BANDI',panel:'myfairplay'},
+    {id:40,remark:'GIRISH BANDHAN',amount:9600,id_name:'m181raju2013',utr:'6994',bank:'GIRISH BANDI',panel:'myfairplay'},
+    {id:41,remark:'GIRISH BANDHAN',amount:300,id_name:'my181sonu510',utr:'2686',bank:'GIRISH BANDI',panel:'myfairplay'},
+    {id:42,remark:'GIRISH BANDHAN',amount:2000,id_name:'mfp223praveen636',utr:'8616',bank:'GIRISH BANDI',panel:'myfairplay'},
+    {id:43,remark:'GIRISH BANDHAN',amount:2000,id_name:'mfp223praveen636',utr:'2893',bank:'UMANG KCB',panel:'myfairplay'},
+    {id:44,remark:'GIRISH BANDHAN',amount:2000,id_name:'mfp223praveen636',utr:'1350',bank:'UMANG KCB',panel:'myfairplay'},
+    {id:45,remark:'GIRISH BANDHAN',amount:1000,id_name:'my181ani7485',utr:'2369',bank:'GIRISH BANDI',panel:'myfairplay'},
+    {id:46,remark:'GIRISH BANDHAN',amount:300,id_name:'f181prash2573',utr:'1963',bank:'GIRISH BANDI',panel:'myfairplay'},
+    {id:47,remark:'',amount:800,id_name:'M181SHIVAM1572',utr:'3178',bank:'PIYUSH CSB',panel:'myfairplay'},
+  ],
+  withdrawals:[
+    {id:1,remark:'',amount:3900,id_name:'X65SONU301',panel:'11xplay',bank:'DCB PIYUSH',w_remark:''},
+    {id:2,remark:'',amount:580,id_name:'MY65MOHIT286',panel:'myfairplay',bank:'JAGDISH DCB',w_remark:''},
+    {id:3,remark:'',amount:300,id_name:'FP65Bhagu346',panel:'fairplay',bank:'VISHAL CSB',w_remark:''},
+    {id:4,remark:'',amount:500,id_name:'MY65SOHAIL616',panel:'myfairplay',bank:'PIYUSH CSB',w_remark:''},
+    {id:5,remark:'',amount:500,id_name:'FP65PRAMOD31',panel:'fairplay',bank:'MISTAK',w_remark:'ID CANCELED'},
+    {id:6,remark:'',amount:500,id_name:'FP65TEJA9638',panel:'fairplay',bank:'MISTAK',w_remark:'BY MISTAKE'},
+    {id:7,remark:'',amount:1000,id_name:'X65SHIVARAJ2005',panel:'11xplay',bank:'RAHUL UTKS',w_remark:''},
+    {id:8,remark:'',amount:1000,id_name:'MY65KUNAL9103',panel:'myfairplay',bank:'RAHUL UTKS',w_remark:''},
+    {id:9,remark:'',amount:800,id_name:'FP65SID664',panel:'fairplay',bank:'MAYUR IOB',w_remark:'MAYUR IOB'},
+    {id:10,remark:'',amount:500,id_name:'FP65BHAU0989',panel:'fairplay',bank:'MAYUR IOB',w_remark:'MAYUR IOB'},
+    {id:11,remark:'',amount:3600,id_name:'MY65MESSI844',panel:'myfairplay',bank:'BHAGI PORT 1',w_remark:''},
+    {id:12,remark:'',amount:69,id_name:'fp491roy',panel:'fairplay',bank:'',w_remark:''},
+    {id:13,remark:'',amount:62,id_name:'ww120nitesh8333',panel:'fairplay',bank:'',w_remark:''},
+    {id:14,remark:'',amount:300,id_name:'FP65Prasanna',panel:'fairplay',bank:'BHAGI PORT 1',w_remark:''},
+    {id:15,remark:'',amount:499,id_name:'FP65sonnu702',panel:'fairplay',bank:'REKHA BOI',w_remark:''},
+    {id:16,remark:'',amount:500,id_name:'FP65VISHAL9395',panel:'fairplay',bank:'BHAGI PORT 1',w_remark:''},
+    {id:17,remark:'',amount:500,id_name:'FP65VISHAL9395',panel:'fairplay',bank:'BHAGI PORT 1',w_remark:''},
+    {id:18,remark:'',amount:2700,id_name:'X65SONU301',panel:'11xplay',bank:'BHAGI PORT 1',w_remark:''},
+    {id:19,remark:'',amount:400,id_name:'MY65RAVI4692',panel:'myfairplay',bank:'BHAGI PORT 1',w_remark:''},
+    {id:20,remark:'',amount:500,id_name:'FP65LOKESH789',panel:'fairplay',bank:'BHAGI PORT 1',w_remark:''},
+    {id:21,remark:'',amount:6500,id_name:'FP65LOKESH789',panel:'fairplay',bank:'RAHUL UTKS',w_remark:''},
+    {id:22,remark:'',amount:360,id_name:'m181upen5511',panel:'myfairplay',bank:'PIYUSH CSB',w_remark:''},
+    {id:23,remark:'',amount:1200,id_name:'m181vikram9775',panel:'myfairplay',bank:'JIMESH SRYD',w_remark:''},
+    {id:24,remark:'',amount:5100,id_name:'my181suman',panel:'myfairplay',bank:'LAL IOB',w_remark:''},
+    {id:25,remark:'',amount:1000,id_name:'FP65RAJU3364',panel:'fairplay',bank:'DCB PIYUSH',w_remark:''},
+    {id:26,remark:'',amount:1000,id_name:'FP65RAJU3364',panel:'fairplay',bank:'DCB PIYUSH',w_remark:''},
+    {id:27,remark:'',amount:2500,id_name:'FP65VISHAL9395',panel:'fairplay',bank:'BHAGI PORT 1',w_remark:''},
+    {id:28,remark:'',amount:3500,id_name:'FP65VISHAL9395',panel:'fairplay',bank:'UMANG KCB',w_remark:''},
+    {id:29,remark:'',amount:5000,id_name:'MY65Vishal9395',panel:'myfairplay',bank:'UMANG KCB',w_remark:''},
+  ],
+  banks:[
+    {id:1,name:'VISHAL CSB',op_bal:66748,deposit:44449,withdrawal:61750,transfer_in:70000,transfer_out:54500,expenses:0,income:0},
+    {id:2,name:'BHOGEKAR CSB',op_bal:24082,deposit:0,withdrawal:23500,transfer_in:37000,transfer_out:10000,expenses:27999,income:0},
+    {id:3,name:'PIYUSH CSB',op_bal:-35511,deposit:336651,withdrawal:52460,transfer_in:42000,transfer_out:244500,expenses:0,income:0},
+    {id:4,name:'PARESH UTKS',op_bal:3590,deposit:2000,withdrawal:0,transfer_in:0,transfer_out:0,expenses:0,income:0},
+    {id:5,name:'LAL BANDHAN',op_bal:391,deposit:0,withdrawal:0,transfer_in:272900,transfer_out:242580,expenses:20,income:0},
+    {id:6,name:'REETA BNDH',op_bal:30418,deposit:0,withdrawal:0,transfer_in:105000,transfer_out:195550,expenses:15,income:98163},
+    {id:7,name:'SAVITA BANDHAN',op_bal:16455,deposit:0,withdrawal:895519,transfer_in:882500,transfer_out:0,expenses:495,income:0},
+    {id:8,name:'JAGDISH DCB',op_bal:26527,deposit:385489,withdrawal:4459,transfer_in:25000,transfer_out:400500,expenses:0,income:0},
+    {id:9,name:'DCB PIYUSH',op_bal:35115,deposit:404980,withdrawal:110219,transfer_in:90000,transfer_out:385000,expenses:135,income:0},
+    {id:10,name:'UMANG KCB',op_bal:-2219,deposit:195612,withdrawal:81300,transfer_in:12000,transfer_out:116000,expenses:0,income:0},
+    {id:11,name:'ARVIND KCB',op_bal:29892,deposit:216830,withdrawal:142000,transfer_in:319000,transfer_out:369720,expenses:0,income:0},
+    {id:12,name:'HIMANSHU KCB',op_bal:14704,deposit:134401,withdrawal:75000,transfer_in:130000,transfer_out:187700,expenses:0,income:0},
+    {id:13,name:'LAL IOB',op_bal:31753,deposit:0,withdrawal:22018,transfer_in:30000,transfer_out:23000,expenses:498,income:0},
+    {id:14,name:'REKHA BOI',op_bal:2263,deposit:0,withdrawal:21039,transfer_in:34700,transfer_out:0,expenses:15000,income:0},
+    {id:15,name:'JIMESH SRYD',op_bal:4647,deposit:389422,withdrawal:21510,transfer_in:13000,transfer_out:269050,expenses:0,income:0},
+    {id:16,name:'MADHAVI BANDHAN',op_bal:25032,deposit:0,withdrawal:26300,transfer_in:221000,transfer_out:182000,expenses:0,income:0},
+    {id:17,name:'GIRISH BANDHAN',op_bal:152,deposit:179701,withdrawal:48871,transfer_in:50000,transfer_out:155000,expenses:622,income:0},
+    {id:18,name:'RAHUL UTKS',op_bal:0,deposit:65560,withdrawal:4944,transfer_in:45000,transfer_out:72000,expenses:0,income:0},
+    {id:19,name:'MAYUR IOB',op_bal:0,deposit:99296,withdrawal:6598,transfer_in:0,transfer_out:0,expenses:0,income:0},
+    {id:20,name:'USDT',op_bal:14973,deposit:0,withdrawal:0,transfer_in:0,transfer_out:0,expenses:0,income:0},
+  ],
+  panels:[
+    {id:1,panel_no:'65',panel:'fairplay',opening_bal:300000,deposit:136976,withdraw:29330,coins_added:0,settlement:0},
+    {id:2,panel_no:'65',panel:'myfairplay',opening_bal:300000,deposit:50360,withdraw:11580,coins_added:0,settlement:0},
+    {id:3,panel_no:'65',panel:'laser',opening_bal:100000,deposit:4000,withdraw:0,coins_added:0,settlement:0},
+    {id:4,panel_no:'65',panel:'11xplay',opening_bal:100000,deposit:77956,withdraw:7600,coins_added:0,settlement:0},
+    {id:5,panel_no:'57',panel:'fairplay',opening_bal:500000,deposit:137180,withdraw:55745,coins_added:0,settlement:200000},
+    {id:6,panel_no:'57',panel:'myfairplay',opening_bal:300000,deposit:443022,withdraw:187642,coins_added:200000,settlement:0},
+    {id:7,panel_no:'36',panel:'fairplay',opening_bal:459169,deposit:1363367,withdraw:1275723,coins_added:0,settlement:0},
+    {id:8,panel_no:'36',panel:'myfairplay',opening_bal:303936,deposit:480106,withdraw:524791,coins_added:0,settlement:0},
+  ],
+  income:[{id:1,date:'Oct 2024',source:'REETA BNDH',amount:98163,bank:'REETA BNDH',remark:'rbc 83'}],
+  expenses:[
+    {id:1,date:'Oct 2024',category:'Charges',amount:20,bank:'LAL BANDHAN',remark:''},
+    {id:2,date:'Oct 2024',category:'Charges',amount:15,bank:'REETA BNDH',remark:''},
+    {id:3,date:'Oct 2024',category:'Operations',amount:495,bank:'SAVITA BANDHAN',remark:''},
+    {id:4,date:'Oct 2024',category:'Charges',amount:135,bank:'DCB PIYUSH',remark:''},
+    {id:5,date:'Oct 2024',category:'Charges',amount:498,bank:'LAL IOB',remark:''},
+    {id:6,date:'Oct 2024',category:'Operations',amount:15000,bank:'REKHA BOI',remark:''},
+    {id:7,date:'Oct 2024',category:'Charges',amount:622,bank:'GIRISH BANDHAN',remark:''},
+    {id:8,date:'Oct 2024',category:'Charges',amount:27999,bank:'BHOGEKAR CSB',remark:''},
+  ],
+  internal:[
+    {id:1,date:'Oct 2024',from_bank:'VISHAL CSB',to_bank:'PIYUSH CSB',amount:70000,remark:'Transfer In'},
+    {id:2,date:'Oct 2024',from_bank:'PIYUSH CSB',to_bank:'JAGDISH DCB',amount:25000,remark:''},
+    {id:3,date:'Oct 2024',from_bank:'JAGDISH DCB',to_bank:'SAVITA BANDHAN',amount:882500,remark:''},
+    {id:4,date:'Oct 2024',from_bank:'ARVIND KCB',to_bank:'HIMANSHU KCB',amount:130000,remark:''},
+    {id:5,date:'Oct 2024',from_bank:'LAL BANDHAN',to_bank:'UMANG KCB',amount:12000,remark:''},
+  ],
+  team:[{id:1,name:'RAK Admin',email:'admin@rak.finance',role:'Owner',access:'admin'}]
+};
+
+// ═══════════════════════════════════════════════════════════
+// LOCALSTORAGE PERSISTENCE  (Priority Fix)
+// ═══════════════════════════════════════════════════════════
+const LS_KEY = 'rak_finance_v3';
+let DB = {};
+let saveTimer = null;
+let isDirty = false;
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      DB = JSON.parse(raw);
+      // Ensure all keys exist (for upgrades)
+      Object.keys(DEFAULTS).forEach(k=>{ if(!DB[k]) DB[k]=JSON.parse(JSON.stringify(DEFAULTS[k])); });
+    } else {
+      DB = JSON.parse(JSON.stringify(DEFAULTS));
+    }
+  } catch(e){ DB = JSON.parse(JSON.stringify(DEFAULTS)); }
+  // Compute next IDs
+  Object.keys(DB).forEach(k=>{
+    if(Array.isArray(DB[k])){ const mx=DB[k].reduce((m,r)=>Math.max(m,r.id||0),0); nextId[k]=mx+1; }
+  });
+}
+
+function saveDB(){
+  clearTimeout(saveTimer);
+  isDirty = true;
+  setSaveStatus(false);
+  saveTimer = setTimeout(()=>{
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); isDirty=false; setSaveStatus(true); } catch(e){ toast('Storage full! Export CSV to backup.',1); }
+  }, 400);
+}
+
+function setSaveStatus(saved){
+  const dot=document.getElementById('save-dot'), lbl=document.getElementById('save-label');
+  if(!dot||!lbl) return;
+  if(saved){ dot.className='save-dot'; lbl.textContent='Saved'; }
+  else { dot.className='save-dot dirty'; lbl.textContent='Saving…'; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCHEMA
+// ═══════════════════════════════════════════════════════════
+const PL = ['fairplay','myfairplay','11xplay','laser'];
+const BL = ['PIYUSH CSB','VISHAL CSB','DCB PIYUSH','JAGDISH DCB','UMANG KCB','ARVIND KCB','HIMANSHU KCB','GIRISH BANDHAN','RAHUL UTKS','MAYUR IOB','LAL BANDHAN','REETA BNDH','SAVITA BANDHAN','REKHA BOI','JIMESH SRYD','LAL IOB','BHOGEKAR CSB','BHAGI PORT 1','FP65 NEW ID','ID TRF 65','PARESH UTKS','MISTAK','MADHAVI BANDHAN','USDT'];
+const CL = ['Charges','Operations','Transfer Fee','Misc'];
+
+// t: text|num|sel|auto  css: td class  w: min-width px
+const SCH = {
+  deposits:[
+    {k:'remark',  t:'text', css:'',      w:110, lbl:'REMARK'},
+    {k:'amount',  t:'num',  css:'c-num', w:100, lbl:'AMOUNT'},
+    {k:'id_name', t:'text', css:'c-bold',w:150, lbl:'ID NAME'},
+    {k:'utr',     t:'text', css:'c-mono',w:80,  lbl:'UTR'},
+    {k:'bank',    t:'sel',  css:'',      w:150, lbl:'BANK',  opts:BL},
+    {k:'panel',   t:'sel',  css:'',      w:100, lbl:'PANEL', opts:PL},
+  ],
+  withdrawals:[
+    {k:'remark',   t:'text',css:'',       w:100, lbl:'REMARK'},
+    {k:'amount',   t:'num', css:'c-numR', w:100, lbl:'AMOUNT'},
+    {k:'id_name',  t:'text',css:'c-bold', w:150, lbl:'ID NAME'},
+    {k:'panel',    t:'sel', css:'',       w:100, lbl:'PANEL',    opts:PL},
+    {k:'bank',     t:'sel', css:'',       w:150, lbl:'BANK',     opts:BL},
+    {k:'w_remark', t:'text',css:'',       w:120, lbl:'W. REMARK'},
+  ],
+  income:[
+    {k:'date',   t:'text',css:'c-mono', w:100, lbl:'DATE'},
+    {k:'source', t:'text',css:'c-bold', w:140, lbl:'SOURCE'},
+    {k:'amount', t:'num', css:'c-num',  w:110, lbl:'AMOUNT'},
+    {k:'bank',   t:'sel', css:'',       w:150, lbl:'BANK',   opts:BL},
+    {k:'remark', t:'text',css:'',       w:140, lbl:'REMARK'},
+  ],
+  expenses:[
+    {k:'date',     t:'text',css:'c-mono',w:100, lbl:'DATE'},
+    {k:'category', t:'sel', css:'',      w:120, lbl:'CATEGORY', opts:CL},
+    {k:'amount',   t:'num', css:'c-numR',w:110, lbl:'AMOUNT'},
+    {k:'bank',     t:'sel', css:'',      w:150, lbl:'BANK',     opts:BL},
+    {k:'remark',   t:'text',css:'',      w:140, lbl:'REMARK'},
+  ],
+  internal:[
+    {k:'date',      t:'text',css:'c-mono',w:100, lbl:'DATE'},
+    {k:'from_bank', t:'sel', css:'c-bold',w:150, lbl:'FROM BANK', opts:BL},
+    {k:'to_bank',   t:'sel', css:'c-bold',w:150, lbl:'TO BANK',   opts:BL},
+    {k:'amount',    t:'num', css:'c-num', w:120, lbl:'AMOUNT'},
+    {k:'remark',    t:'text',css:'',      w:130, lbl:'REMARK'},
+  ],
+  banks:[
+    {k:'name',        t:'text',css:'c-bold', w:160, lbl:'BANK NAME'},
+    {k:'op_bal',      t:'num', css:'',       w:110, lbl:'OP BALANCE'},
+    {k:'deposit',     t:'num', css:'c-num',  w:110, lbl:'DEPOSIT'},
+    {k:'withdrawal',  t:'num', css:'c-numR', w:110, lbl:'WITHDRAWAL'},
+    {k:'transfer_in', t:'num', css:'',       w:110, lbl:'TRANSFER IN'},
+    {k:'transfer_out',t:'num', css:'',       w:110, lbl:'TRANSFER OUT'},
+    {k:'expenses',    t:'num', css:'c-numR', w:100, lbl:'EXPENSES'},
+    {k:'income',      t:'num', css:'c-num',  w:100, lbl:'INCOME'},
+    {k:'_avail',      t:'auto',css:'c-auto', w:130, lbl:'AVAILABLE BAL ⚡'},
+  ],
+  panels:[
+    {k:'panel_no',   t:'text',css:'c-mono',w:80,  lbl:'PANEL NO.'},
+    {k:'panel',      t:'sel', css:'c-bold',w:100, lbl:'PANEL',        opts:PL},
+    {k:'opening_bal',t:'num', css:'',      w:120, lbl:'OPENING BAL'},
+    {k:'deposit',    t:'num', css:'c-num', w:110, lbl:'DEPOSIT'},
+    {k:'withdraw',   t:'num', css:'c-numR',w:110, lbl:'WITHDRAW'},
+    {k:'_diff',      t:'auto',css:'c-auto',w:110, lbl:'DIFF ⚡'},
+    {k:'coins_added',t:'num', css:'',      w:110, lbl:'COINS ADDED'},
+    {k:'settlement', t:'num', css:'',      w:110, lbl:'SETTLEMENT'},
+    {k:'_cl',        t:'auto',css:'c-auto',w:130, lbl:'CL COIN BAL ⚡'},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════
+// AUTO-CALC
+// ═══════════════════════════════════════════════════════════
+function calc(s,r){
+  if(s==='banks') r._avail=(r.op_bal||0)+(r.deposit||0)-(r.withdrawal||0)+(r.transfer_in||0)-(r.transfer_out||0)-(r.expenses||0)+(r.income||0);
+  if(s==='panels'){ r._diff=(r.deposit||0)-(r.withdraw||0); r._cl=(r.opening_bal||0)+(r._diff||0)-(r.settlement||0); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// UNDO / REDO  (per sheet, 100-step history)
+// ═══════════════════════════════════════════════════════════
+const UH={}; // {sheet:{stack:[],ptr:0}}
+function uh(s){ if(!UH[s]) UH[s]={stack:[],ptr:-1}; return UH[s]; }
+
+function pushUndo(s, snapshot){
+  const h=uh(s);
+  h.stack=h.stack.slice(0,h.ptr+1); // cut redo future
+  h.stack.push(snapshot);
+  if(h.stack.length>100) h.stack.shift();
+  h.ptr=h.stack.length-1;
+}
+
+function doUndo(s){
+  const h=uh(s);
+  if(h.ptr<=0){ toast('Nothing to undo','info'); return; }
+  h.ptr--;
+  DB[s]=JSON.parse(JSON.stringify(h.stack[h.ptr]));
+  buildGrid(s,DB[s]); refreshDash(); saveDB(); toast('↩ Undo');
+}
+
+function doRedo(s){
+  const h=uh(s);
+  if(h.ptr>=h.stack.length-1){ toast('Nothing to redo','info'); return; }
+  h.ptr++;
+  DB[s]=JSON.parse(JSON.stringify(h.stack[h.ptr]));
+  buildGrid(s,DB[s]); refreshDash(); saveDB(); toast('↪ Redo');
+}
+
+function snapshot(s){
+  const h=uh(s);
+  const data=JSON.parse(JSON.stringify(DB[s]));
+  if(h.ptr>=0 && JSON.stringify(h.stack[h.ptr])===JSON.stringify(data)) return; // no-op
+  pushUndo(s, data);
+}
+
+// ═══════════════════════════════════════════════════════════
+// NEXT ID
+// ═══════════════════════════════════════════════════════════
+const nextId={deposits:200,withdrawals:200,income:20,expenses:20,internal:20,banks:30,panels:20,team:10};
+
+// ═══════════════════════════════════════════════════════════
+// ACTIVE CELL STATE
+// ═══════════════════════════════════════════════════════════
+let AC=null;  // {sheet,ri,ci,rowId}  active cell
+let isEditing=false;
+let ddActive=null; // active dropdown overlay
+let currentSheet=null;
+
+// ═══════════════════════════════════════════════════════════
+// BUILD GRID
+// ═══════════════════════════════════════════════════════════
+function buildGrid(s, data){
+  const schema=SCH[s]; if(!schema) return;
+  data=data.map(r=>{ const c={...r}; calc(s,c); return c; });
+  const tbody=document.getElementById('body-'+s); if(!tbody) return;
+  const frag=document.createDocumentFragment();
+
+  data.forEach((row,ri)=>{
+    const tr=document.createElement('tr');
+    tr.dataset.id=row.id; tr.dataset.ri=ri;
+    if(AC&&AC.sheet===s&&AC.ri===ri) tr.classList.add('row-selected');
+
+    // Row number
+    const nth=document.createElement('td');
+    nth.className='td-row-num';
+    nth.innerHTML=`<span style="display:block;text-align:center;line-height:32px">${ri+1}</span><span class="row-del-btn" onclick="delRow('${s}',${row.id})">×</span>`;
+    tr.appendChild(nth);
+
+    schema.forEach((col,ci)=>{
+      const td=document.createElement('td');
+      if(col.css) td.className=col.css;
+      td.dataset.ci=ci; td.dataset.field=col.k;
+      if(col.w) td.style.minWidth=col.w+'px';
+
+      let val=row[col.k]; if(val===undefined&&col.t==='auto') val=row['_'+col.k.replace('_','')];
+      const isAuto=col.t==='auto';
+      const isNum=col.t==='num'||isAuto;
+      const disp=(isNum&&val!=null)?'₹'+nf(val):String(val||'');
+
+      if(isAuto){
+        const pos=(val||0)>=0;
+        td.className=(pos?'c-auto-pos':'c-auto-neg');
+      }
+
+      const span=document.createElement('span');
+      span.className='cell';
+      span.tabIndex=0;
+      span.textContent=disp;
+      span.setAttribute('data-raw',String(val===undefined?'':val));
+
+      span.addEventListener('mousedown', e=>{ e.preventDefault(); focusCell(s,ri,ci,row.id,false); });
+      span.addEventListener('dblclick',  e=>{ e.stopPropagation(); focusCell(s,ri,ci,row.id,true); });
+      span.addEventListener('keydown',   e=>cellKey(e,s,ri,ci,row.id));
+      td.appendChild(span);
+      tr.appendChild(td);
+    });
+
+    // Tail
+    const tailTd=document.createElement('td'); tailTd.style.minWidth='36px'; tr.appendChild(tailTd);
+    frag.appendChild(tr);
+  });
+
+  tbody.innerHTML=''; tbody.appendChild(frag);
+  updateFooter(s,data);
+  if(AC&&AC.sheet===s) highlightActive();
+}
+
+// ═══════════════════════════════════════════════════════════
+// FOCUS / EDIT
+// ═══════════════════════════════════════════════════════════
+function focusCell(s,ri,ci,rowId,startEdit){
+  closeDropdown();
+  if(isEditing) commitEdit(true);
+  // Clear old
+  document.querySelectorAll('.cell.focused').forEach(e=>e.classList.remove('focused'));
+  document.querySelectorAll('tr.row-selected').forEach(e=>e.classList.remove('row-selected'));
+
+  AC={sheet:s,ri,ci,rowId};
+  currentSheet=s;
+  const tr=getRow(s,ri); if(!tr) return;
+  tr.classList.add('row-selected');
+  const td=tr.children[ci+1]; if(!td) return;
+  const span=td.querySelector('.cell'); if(!span) return;
+  span.classList.add('focused');
+  span.focus();
+
+  // Formula bar
+  const schema=SCH[s];
+  const col=schema[ci];
+  const colLetter=String.fromCharCode(65+ci);
+  setEl('cell-ref-display',colLetter+(ri+1));
+  const rawVal=span.getAttribute('data-raw');
+  const fi=document.getElementById('formula-input');
+  if(fi) fi.value=rawVal||'';
+
+  if(startEdit) beginEdit(s,ri,ci,rowId,td,span);
+}
+
+function beginEdit(s,ri,ci,rowId,td,span){
+  const schema=SCH[s]; const col=schema[ci]; if(!col||col.t==='auto') return;
+  isEditing=true;
+  const row=DB[s].find(r=>r.id===rowId); if(!row) return;
+  const rawVal=row[col.k]!==undefined?row[col.k]:'';
+  td.classList.add('editing-td');
+  span.classList.add('focused');
+
+  if(col.t==='sel'){
+    // Custom dropdown
+    openDropdown(s,ri,ci,rowId,td,span,col,rawVal);
+  } else {
+    const inp=document.createElement('input');
+    inp.className='cell-editor';
+    inp.type=col.t==='num'?'number':'text';
+    inp.value=rawVal;
+    td.appendChild(inp); inp.focus(); try{inp.select();}catch(e){}
+    inp.addEventListener('blur',()=>setTimeout(()=>{ if(isEditing) commitEdit(false); },80));
+    inp.addEventListener('keydown',e=>editorKey(e,s,ri,ci,rowId,inp,col));
+    span.style.visibility='hidden';
+  }
+}
+
+function openDropdown(s,ri,ci,rowId,td,span,col,curVal){
+  closeDropdown();
+  const opts=col.opts||[];
+  const tdRect=td.getBoundingClientRect();
+  const div=document.createElement('div');
+  div.className='dropdown-overlay';
+  div.style.top=(tdRect.bottom+2)+'px';
+  div.style.left=tdRect.left+'px';
+  div.style.minWidth=Math.max(tdRect.width,160)+'px';
+
+  let activeIdx=0;
+  const items=opts.map((o,i)=>{
+    const d=document.createElement('div');
+    d.className='dd-item'+(String(curVal)===o?' dd-selected':'');
+    d.textContent=o||'—';
+    d.addEventListener('mousedown',e=>{ e.preventDefault(); selectDDOption(s,ri,ci,rowId,o); });
+    if(String(curVal)===o) activeIdx=i;
+    return d;
+  });
+  items.forEach(d=>div.appendChild(d));
+  document.body.appendChild(div);
+  ddActive={div,opts,s,ri,ci,rowId,span,td,col,curIdx:activeIdx,items};
+  if(items[activeIdx]) items[activeIdx].classList.add('dd-active');
+  div.scrollTop=Math.max(0,(activeIdx-3)*34);
+  span.style.visibility='hidden';
+
+  // Type-to-filter
+  const inp=document.createElement('input');
+  inp.className='cell-editor';
+  inp.value=String(curVal);
+  td.appendChild(inp); inp.focus(); try{inp.select();}catch(e){}
+  inp.addEventListener('input',()=>filterDD(inp.value));
+  inp.addEventListener('keydown',e=>ddKey(e,s,ri,ci,rowId,inp));
+  inp.addEventListener('blur',()=>setTimeout(()=>{ if(ddActive) { selectDDOption(s,ri,ci,rowId,inp.value==='--'?'':inp.value); } },100));
+  ddActive.inp=inp;
+}
+
+function filterDD(q){
+  if(!ddActive) return;
+  const lq=q.toLowerCase();
+  ddActive.items.forEach(item=>{ item.style.display=item.textContent.toLowerCase().includes(lq)?'':'none'; });
+}
+
+function ddKey(e,s,ri,ci,rowId,inp){
+  if(!ddActive) return;
+  const visItems=ddActive.items.filter(x=>x.style.display!=='none');
+  if(e.key==='ArrowDown'){ e.preventDefault(); ddMove(1,visItems); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); ddMove(-1,visItems); }
+  else if(e.key==='Enter'){ e.preventDefault(); const act=ddActive.items.find(x=>x.classList.contains('dd-active')&&x.style.display!=='none'); if(act) selectDDOption(s,ri,ci,rowId,act.textContent); else { selectDDOption(s,ri,ci,rowId,inp.value); } }
+  else if(e.key==='Escape'){ e.preventDefault(); cancelEdit(); }
+  else if(e.key==='Tab'){ e.preventDefault(); const act=ddActive.items.find(x=>x.classList.contains('dd-active')&&x.style.display!=='none'); if(act) selectDDOption(s,ri,ci,rowId,act.textContent); else selectDDOption(s,ri,ci,rowId,inp.value); setTimeout(()=>moveCell(0,e.shiftKey?-1:1),10); }
+}
+
+function ddMove(dir,visItems){
+  if(!ddActive||!visItems.length) return;
+  const cur=visItems.findIndex(x=>x.classList.contains('dd-active'));
+  ddActive.items.forEach(x=>x.classList.remove('dd-active'));
+  const next=Math.max(0,Math.min(visItems.length-1,(cur<0?0:cur)+dir));
+  visItems[next].classList.add('dd-active');
+  visItems[next].scrollIntoView({block:'nearest'});
+}
+
+function selectDDOption(s,ri,ci,rowId,val){
+  const row=DB[s].find(r=>r.id===rowId); if(!row) return;
+  const schema=SCH[s]; const col=schema[ci];
+  snapshot(s);
+  row[col.k]=val; calc(s,row);
+  closeDropdown();
+  isEditing=false;
+  buildGrid(s,DB[s]); refreshDash(); saveDB();
+  // Stay on same cell, ready for next nav
+  setTimeout(()=>focusCell(s,ri,ci,rowId,false),10);
+}
+
+function closeDropdown(){
+  if(ddActive){ ddActive.div.remove(); ddActive=null; }
+  document.querySelectorAll('.cell-editor').forEach(e=>e.remove());
+  document.querySelectorAll('.cell').forEach(e=>e.style.visibility='');
+  document.querySelectorAll('.editing-td').forEach(e=>e.classList.remove('editing-td'));
+}
+
+function commitEdit(moveDown){
+  const ed=document.querySelector('.cell-editor');
+  if(!ed||!AC) { isEditing=false; closeDropdown(); return; }
+  const {sheet:s,ri,ci,rowId}=AC;
+  const schema=SCH[s]; const col=schema[ci]; if(!col) return;
+  const raw=ed.value;
+  const val=col.t==='num'?(parseFloat(raw)||0):(raw||'');
+  snapshot(s);
+  const row=DB[s].find(r=>r.id===rowId);
+  if(row){ row[col.k]=val; calc(s,row); }
+  isEditing=false;
+  closeDropdown();
+  buildGrid(s,DB[s]); refreshDash(); saveDB();
+  setTimeout(()=>{ if(moveDown) moveCell(1,0); else focusCell(s,ri,ci,rowId,false); },10);
+}
+
+function cancelEdit(){
+  isEditing=false;
+  closeDropdown();
+  if(AC) setTimeout(()=>focusCell(AC.sheet,AC.ri,AC.ci,AC.rowId,false),10);
+}
+
+// ═══════════════════════════════════════════════════════════
+// KEYBOARD HANDLER
+// ═══════════════════════════════════════════════════════════
+function cellKey(e,s,ri,ci,rowId){
+  const ctrl=e.ctrlKey||e.metaKey;
+  const sh=e.shiftKey;
+  if(isEditing) return;
+
+  // Navigation
+  if(e.key==='ArrowDown'&&!ctrl)     { e.preventDefault(); moveCell(1,0); }
+  else if(e.key==='ArrowUp'&&!ctrl)  { e.preventDefault(); moveCell(-1,0); }
+  else if(e.key==='ArrowRight'&&!ctrl){ e.preventDefault(); moveCell(0,1); }
+  else if(e.key==='ArrowLeft'&&!ctrl){ e.preventDefault(); moveCell(0,-1); }
+  else if(e.key==='ArrowDown'&&ctrl) { e.preventDefault(); moveCell(10,0); }
+  else if(e.key==='ArrowUp'&&ctrl)   { e.preventDefault(); moveCell(-10,0); }
+  else if(e.key==='Tab')             { e.preventDefault(); moveCell(0,sh?-1:1); }
+  else if(e.key==='Enter'||e.key==='F2'){ e.preventDefault(); beginEditFromKey(s,ri,ci,rowId); }
+  else if(e.key==='Home'&&!ctrl)     { e.preventDefault(); moveTo(ri,0); }
+  else if(e.key==='End'&&!ctrl)      { e.preventDefault(); moveTo(ri,SCH[s].length-1); }
+  else if(e.key==='Home'&&ctrl)      { e.preventDefault(); moveTo(0,0); }
+  else if(e.key==='End'&&ctrl)       { e.preventDefault(); const tbody=document.getElementById('body-'+s); moveTo((tbody?tbody.children.length-1:0),SCH[s].length-1); }
+  else if((e.key==='Delete'||e.key==='Backspace')&&!isEditing){ e.preventDefault(); clearCell(s,ri,ci,rowId); }
+  // Ctrl shortcuts
+  else if(ctrl&&e.key==='z'&&!sh)    { e.preventDefault(); doUndo(s); }
+  else if(ctrl&&e.key==='y')         { e.preventDefault(); doRedo(s); }
+  else if(ctrl&&e.key==='z'&&sh)     { e.preventDefault(); doRedo(s); } // Ctrl+Shift+Z = redo
+  else if(ctrl&&(e.key==='='||e.key==='+')&&sh){ e.preventDefault(); addRowAfter(s,ri); }
+  else if(ctrl&&e.key==='-')         { e.preventDefault(); delRow(s,rowId); }
+  else if(ctrl&&e.key==='d')         { e.preventDefault(); dupRow(s,rowId); }
+  // Type to start editing (printable chars)
+  else if(!ctrl && e.key.length===1) { beginEditFromKey(s,ri,ci,rowId,e.key); }
+}
+
+function editorKey(e,s,ri,ci,rowId,inp,col){
+  if(e.key==='Enter'){ e.preventDefault(); commitEdit(true); }
+  else if(e.key==='Tab'){ e.preventDefault(); commitEdit(false); setTimeout(()=>moveCell(0,e.shiftKey?-1:1),10); }
+  else if(e.key==='Escape'){ e.preventDefault(); cancelEdit(); }
+  else if(e.key==='ArrowDown'&&!isEditing){ e.preventDefault(); commitEdit(false); setTimeout(()=>moveCell(1,0),10); }
+  else if(e.key==='ArrowUp'&&!isEditing){ e.preventDefault(); commitEdit(false); setTimeout(()=>moveCell(-1,0),10); }
+}
+
+function beginEditFromKey(s,ri,ci,rowId,startChar){
+  const tr=getRow(s,ri); if(!tr) return;
+  const td=tr.children[ci+1]; if(!td) return;
+  const span=td.querySelector('.cell'); if(!span) return;
+  const schema=SCH[s]; const col=schema[ci];
+  if(!col||col.t==='auto') return;
+  if(startChar){ // typed char: clear & start with that char
+    const row=DB[s].find(r=>r.id===rowId);
+    if(row&&col.t!=='sel'){ snapshot(s); row[col.k]=col.t==='num'?0:''; calc(s,row); }
+  }
+  isEditing=true;
+  td.classList.add('editing-td');
+  if(col.t==='sel'){ openDropdown(s,ri,ci,rowId,td,span,col,DB[s].find(r=>r.id===rowId)?.[col.k]||''); if(startChar&&ddActive&&ddActive.inp){ ddActive.inp.value=startChar; filterDD(startChar); } }
+  else {
+    const inp=document.createElement('input');
+    inp.className='cell-editor';
+    inp.type=col.t==='num'?'number':'text';
+    inp.value=startChar||String(DB[s].find(r=>r.id===rowId)?.[col.k]||'');
+    td.appendChild(inp); inp.focus(); if(!startChar){ try{inp.select();}catch(e){} }
+    inp.addEventListener('blur',()=>setTimeout(()=>{ if(isEditing) commitEdit(false); },80));
+    inp.addEventListener('keydown',e=>editorKey(e,s,ri,ci,rowId,inp,col));
+    span.style.visibility='hidden';
+  }
+}
+
+function clearCell(s,ri,ci,rowId){
+  const schema=SCH[s]; const col=schema[ci]; if(!col||col.t==='auto') return;
+  const row=DB[s].find(r=>r.id===rowId); if(!row) return;
+  snapshot(s);
+  row[col.k]=col.t==='num'?0:''; calc(s,row);
+  buildGrid(s,DB[s]); refreshDash(); saveDB();
+  setTimeout(()=>focusCell(s,ri,ci,rowId,false),10);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CELL MOVEMENT
+// ═══════════════════════════════════════════════════════════
+function moveCell(dr,dc){
+  if(!AC) return;
+  const {sheet:s,ri,ci,rowId}=AC;
+  const tbody=document.getElementById('body-'+s); if(!tbody) return;
+  const rows=tbody.children;
+  const nri=Math.max(0,Math.min(rows.length-1,ri+dr));
+  const nci=Math.max(0,Math.min(SCH[s].length-1,ci+dc));
+  const ntr=rows[nri]; if(!ntr) return;
+  const nid=parseInt(ntr.dataset.id);
+  const ntd=ntr.children[nci+1]; if(!ntd) return;
+  focusCell(s,nri,nci,nid,false);
+  // Scroll into view
+  ntd.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+
+function moveTo(ri,ci){
+  if(!AC) return;
+  const tbody=document.getElementById('body-'+AC.sheet); if(!tbody) return;
+  const rows=tbody.children;
+  const nri=Math.max(0,Math.min(rows.length-1,ri));
+  const nci=Math.max(0,Math.min(SCH[AC.sheet].length-1,ci));
+  const ntr=rows[nri]; if(!ntr) return;
+  focusCell(AC.sheet,nri,nci,parseInt(ntr.dataset.id),false);
+}
+
+function highlightActive(){
+  if(!AC) return;
+  const tr=getRow(AC.sheet,AC.ri); if(!tr) return;
+  tr.classList.add('row-selected');
+  const td=tr.children[AC.ci+1]; if(!td) return;
+  const span=td.querySelector('.cell'); if(span) span.classList.add('focused');
+}
+
+function getRow(s,ri){
+  const tbody=document.getElementById('body-'+s); if(!tbody) return null;
+  return tbody.children[ri]||null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ROW OPERATIONS
+// ═══════════════════════════════════════════════════════════
+function addRow(s){
+  snapshot(s);
+  const schema=SCH[s]; if(!schema) return;
+  const nr={id:nextId[s]++};
+  schema.forEach(c=>{ nr[c.k]=c.t==='num'?0:''; });
+  calc(s,nr);
+  DB[s].push(nr);
+  buildGrid(s,DB[s]); saveDB();
+  const tbody=document.getElementById('body-'+s); if(!tbody) return;
+  const rows=tbody.children; const li=rows.length-1;
+  const ltr=rows[li]; if(!ltr) return;
+  const lid=parseInt(ltr.dataset.id);
+  setTimeout(()=>{ focusCell(s,li,0,lid,true); ltr.scrollIntoView({block:'nearest'}); },20);
+}
+
+function addRowAfter(s,ri){
+  snapshot(s);
+  const schema=SCH[s]; if(!schema) return;
+  const nr={id:nextId[s]++};
+  schema.forEach(c=>{ nr[c.k]=c.t==='num'?0:''; });
+  calc(s,nr);
+  DB[s].splice(ri+1,0,nr);
+  buildGrid(s,DB[s]); saveDB();
+  setTimeout(()=>{ const tbody=document.getElementById('body-'+s); if(!tbody) return; const tr=tbody.children[ri+1]; if(!tr) return; focusCell(s,ri+1,0,parseInt(tr.dataset.id),true); tr.scrollIntoView({block:'nearest'}); },20);
+}
+
+function delRow(s,id){
+  if(!confirm('Delete this row? (Ctrl+Z to undo)')) return;
+  snapshot(s);
+  DB[s]=DB[s].filter(r=>r.id!==id);
+  buildGrid(s,DB[s]); refreshDash(); saveDB(); toast('Deleted — Ctrl+Z to undo');
+}
+
+function dupRow(s,rowId){
+  const row=DB[s].find(r=>r.id===rowId); if(!row) return;
+  snapshot(s);
+  const nr={...row,id:nextId[s]++};
+  const idx=DB[s].findIndex(r=>r.id===rowId);
+  DB[s].splice(idx+1,0,nr);
+  buildGrid(s,DB[s]); saveDB(); toast('Row duplicated');
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTER / SEARCH
+// ═══════════════════════════════════════════════════════════
+function gs(s,q){
+  q=q.toLowerCase(); const schema=SCH[s];
+  buildGrid(s,q?DB[s].filter(r=>schema.some(c=>String(r[c.k]||'').toLowerCase().includes(q))):DB[s]);
+}
+function gf(s,field,val){
+  buildGrid(s,val?DB[s].filter(r=>String(r[field]||'')===val):DB[s]);
+}
+
+// ═══════════════════════════════════════════════════════════
+// FOOTER & STATS
+// ═══════════════════════════════════════════════════════════
+function updateFooter(s,data){
+  const amtK={deposits:'amount',withdrawals:'amount',income:'amount',expenses:'amount',internal:'amount',banks:'deposit',panels:'deposit'};
+  const c=document.getElementById('fc-'+s), t=document.getElementById('ft-'+s);
+  if(c) c.textContent=data.length+' rows';
+  if(t){ const tot=data.reduce((a,r)=>a+(r[amtK[s]]||0),0); t.textContent='Σ ₹'+nf(tot); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// DASHBOARD REFRESH
+// ═══════════════════════════════════════════════════════════
+function refreshDash(){
+  const tD=DB.deposits.reduce((s,r)=>s+(r.amount||0),0);
+  const tW=DB.withdrawals.reduce((s,r)=>s+(r.amount||0),0);
+  const tDf=DB.panels.reduce((s,p)=>s+((p.deposit||0)-(p.withdraw||0)),0);
+  setEl('ds-dep','₹'+sf(tD)); setEl('ds-depc',DB.deposits.length+' transactions');
+  setEl('ds-wdr','₹'+sf(tW)); setEl('ds-wdrc',DB.withdrawals.length+' transactions');
+  setEl('ds-diff','₹'+sf(tDf)); setEl('ds-banks',String(DB.banks.length));
+
+  // Panel table
+  const pt=document.getElementById('dash-panels');
+  if(pt) pt.innerHTML=DB.panels.map(p=>{
+    const d=(p.deposit||0)-(p.withdraw||0);
+    return `<tr><td><span class="dot" style="background:${pc(p.panel)}"></span>${p.panel}</td>
+    <td style="font-family:var(--mono);color:var(--green);font-size:12px">₹${nf(p.deposit||0)}</td>
+    <td style="font-family:var(--mono);color:var(--red);font-size:12px">₹${nf(p.withdraw||0)}</td>
+    <td style="font-family:var(--mono);font-size:12px;color:${d>=0?'var(--green)':'var(--red)'}">₹${nf(d)}</td></tr>`;
+  }).join('');
+
+  const rd=document.getElementById('dash-rdep');
+  if(rd) rd.innerHTML=DB.deposits.slice(-8).reverse().map(d=>`<tr>
+    <td>${d.id_name||''}</td>
+    <td style="font-family:var(--mono);color:var(--green)">₹${nf(d.amount||0)}</td>
+    <td style="color:var(--muted)">${d.bank||''}</td>
+    <td><span class="badge badge-b">${d.panel||''}</span></td></tr>`).join('');
+
+  const rw=document.getElementById('dash-rwdr');
+  if(rw) rw.innerHTML=DB.withdrawals.slice(-8).reverse().map(d=>`<tr>
+    <td>${d.id_name||''}</td>
+    <td style="font-family:var(--mono);color:var(--red)">₹${nf(d.amount||0)}</td>
+    <td style="color:var(--muted)">${d.bank||''}</td>
+    <td><span class="badge badge-v">${d.panel||''}</span></td></tr>`).join('');
+
+  // Chart
+  const tops=[...DB.banks].sort((a,b)=>(b.deposit||0)-(a.deposit||0)).slice(0,10);
+  const mx=Math.max(...tops.map(b=>b.deposit||0),1);
+  const clrs=['var(--accent)','var(--accent2)','var(--accent3)','var(--gold)','var(--green)'];
+  const ch=document.getElementById('dash-chart');
+  if(ch) ch.innerHTML=tops.map((b,i)=>`<div class="cbar" style="height:${Math.max(3,(b.deposit||0)/mx*100)}%;background:${clrs[i%clrs.length]}"><div class="cbar-val">₹${sf(b.deposit||0)}</div><div class="cbar-lbl">${(b.name||'').split(' ')[0]}</div></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+const GRID_SHEETS=['deposits','withdrawals','income','expenses','internal','banks','panels'];
+
+function nav(page){
+  closeDropdown();
+  if(isEditing) commitEdit(false);
+  document.querySelectorAll('.grid-page,.dash-page,.team-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{ if(n.getAttribute('onclick')?.includes("'"+page+"'")) n.classList.add('active'); });
+
+  const fb=document.getElementById('formula-bar');
+  if(fb) fb.style.display=GRID_SHEETS.includes(page)?'flex':'none';
+
+  if(GRID_SHEETS.includes(page)){
+    currentSheet=page;
+    buildGrid(page,DB[page]);
+    // Restore last active cell or go to A1
+    if(AC&&AC.sheet===page){
+      setTimeout(()=>focusCell(page,AC.ri,AC.ci,AC.rowId,false),30);
+    } else {
+      AC=null;
+      const tbody=document.getElementById('body-'+page);
+      if(tbody&&tbody.children.length){ const first=tbody.children[0]; setTimeout(()=>focusCell(page,0,0,parseInt(first.dataset.id),false),30); }
+    }
+    if(page==='deposits'){
+      const bf=document.getElementById('dep-bfil');
+      if(bf&&bf.options.length===1){ [...new Set(DB.deposits.map(d=>d.bank).filter(Boolean))].sort().forEach(b=>{ const o=document.createElement('option'); o.value=o.textContent=b; bf.appendChild(o); }); }
+    }
+  } else { currentSheet=null; AC=null; }
+  if(page==='team') renderTeam();
+  if(page==='dashboard') refreshDash();
+}
+
+// ═══════════════════════════════════════════════════════════
+// TEAM
+// ═══════════════════════════════════════════════════════════
+function renderTeam(){
+  setEl('team-count','('+DB.team.length+')');
+  const tb=document.getElementById('tb-team'); if(!tb) return;
+  tb.innerHTML=DB.team.map(m=>`<tr><td style="font-weight:600">${m.name}</td><td style="color:var(--muted)">${m.email}</td><td>${m.role}</td>
+    <td><span class="perm-badge perm-${m.access}">${m.access==='admin'?'👑 Admin':m.access==='edit'?'✏️ Editor':'👁️ Viewer'}</span></td>
+    <td>${m.access!=='admin'?`<button class="btn btn-ghost" style="font-size:11px;padding:3px 8px" onclick="rmTeam(${m.id})">Remove</button>`:'—'}</td></tr>`).join('');
+}
+function openTeamModal(){ document.getElementById('modal-team').classList.add('open'); }
+function closeModals(){ document.querySelectorAll('.modal-ov').forEach(m=>m.classList.remove('open')); }
+function saveTeamMember(){
+  const n=document.getElementById('t-name').value.trim(), e=document.getElementById('t-email').value.trim();
+  if(!n||!e){ toast('Fill required fields','err'); return; }
+  DB.team.push({id:nextId.team++,name:n,email:e,role:document.getElementById('t-role').value.trim()||'Member',access:document.getElementById('t-access').value});
+  closeModals(); renderTeam(); saveDB(); toast('Member invited ✓');
+}
+function rmTeam(id){ if(!confirm('Remove?')) return; DB.team=DB.team.filter(m=>m.id!==id); renderTeam(); saveDB(); toast('Removed'); }
+
+// ═══════════════════════════════════════════════════════════
+// SHORTCUTS PANEL
+// ═══════════════════════════════════════════════════════════
+function showShortcuts(){ document.getElementById('shortcut-panel').classList.add('open'); }
+function hideShortcuts(){ document.getElementById('shortcut-panel').classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════════════
+function exportCSV(s){
+  s=s||currentSheet||'deposits';
+  const schema=SCH[s]; if(!schema) return;
+  const data=DB[s].map(r=>{ const c={...r}; calc(s,c); return c; });
+  const hdrs=['#',...schema.map(c=>c.lbl)];
+  const rows=data.map((r,i)=>[i+1,...schema.map(c=>{ const v=r[c.k]; return v!=null?v:''; })]);
+  const csv=[hdrs,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`RAK_${s}_${new Date().toISOString().slice(0,10)}.csv`; a.click(); toast('Exported ✓');
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+function nf(n){ return Number(n||0).toLocaleString('en-IN'); }
+function sf(n){ if(Math.abs(n)>=1e7) return (n/1e7).toFixed(1)+'Cr'; if(Math.abs(n)>=1e5) return (n/1e5).toFixed(1)+'L'; if(Math.abs(n)>=1000) return (n/1000).toFixed(1)+'K'; return String(n); }
+function pc(p){ return {fairplay:'var(--accent)',myfairplay:'var(--accent3)','11xplay':'var(--gold)',laser:'var(--accent2)'}[p]||'var(--muted)'; }
+function setEl(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
+function toast(msg,type='ok'){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+(type==='err'?'err':type==='info'?'info':'ok'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2000); }
+
+// Global keydown (when no cell focused)
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(ddActive){ e.preventDefault(); cancelEdit(); return; }
+    if(document.getElementById('shortcut-panel').classList.contains('open')){ hideShortcuts(); return; }
+  }
+  // If a cell is active and we're not in an input, route to cellKey
+  if(AC&&!isEditing&&!e.target.matches('input,select,textarea')){
+    cellKey(e,AC.sheet,AC.ri,AC.ci,AC.rowId);
+  }
+});
+
+// Close dropdown on outside click
+document.addEventListener('mousedown',e=>{
+  if(ddActive&&!e.target.closest('.dropdown-overlay')&&!e.target.closest('td')){ cancelEdit(); }
+});
+document.querySelectorAll('.modal-ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) closeModals(); }));
+
+function onWrapScroll(e,s){ /* stub */ }
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+loadDB();
+// Seed initial undo history for each sheet
+GRID_SHEETS.forEach(s=>{ if(DB[s]) { const h=uh(s); h.stack=[JSON.parse(JSON.stringify(DB[s]))]; h.ptr=0; } });
+refreshDash();
+setSaveStatus(true);
+</script>
+</body>
+</html>
